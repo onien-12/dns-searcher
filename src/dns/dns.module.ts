@@ -5,5 +5,6 @@ import { DnsController } from './dns.controller';
 @Module({
   controllers: [DnsController],
   providers: [DnsService],
+  exports: [DnsService],
 })
 export class DnsModule {}
