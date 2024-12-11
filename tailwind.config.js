@@ -4,10 +4,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#ff6600",
-        secondary: "#005bff",
-        background: "#f5f5f5",
-        text: "#333333",
+        primary: "var(--color-primary)",
+        secondary: "var(--color-secondary)",
+        background: "var(--color-background)",
+        text: "var(--color-text)",
+        focus: "var(--color-focus)",
+        selected: "var(--color-selected)"
       },
     },
   },
