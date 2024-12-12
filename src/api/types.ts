@@ -3,6 +3,11 @@ export interface QueryProductGroupsResponse {
   product_groups: ProductGroup[];
 }
 
+export interface PriceRange {
+  min: number;
+  max: number;
+}
+
 export interface ProductGroup {
   title: string;
   products: Product[];

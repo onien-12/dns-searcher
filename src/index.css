@@ -7,7 +7,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  --color-primary: linear-gradient(0deg,#fc8507,#ffa218);
+  --color-primary: linear-gradient(0deg, #fc8507, #ffa218);
   --color-secondary: #d8d8d8;
   --color-background: #f5f5f5;
   --color-text: #333333;
@@ -59,11 +59,11 @@ button {
 }
 
 button:hover {
-  box-shadow: inset 0 100px 0 hsla(0, 0%, 100%, .1);
+  box-shadow: inset 0 100px 0 hsla(0, 0%, 100%, 0.1);
 }
 
 button:active {
-  box-shadow: 0 0 0 3px rgba(252, 133, 7, .2);
+  box-shadow: 0 0 0 3px rgba(252, 133, 7, 0.2);
 }
 
 .bg-selected {
@@ -72,13 +72,12 @@ button:active {
 
 @media (prefers-color-scheme: light) {
   :root {
-
   }
   a:hover {
-    color: rgba(255,156,51,.8);
+    color: rgba(255, 156, 51, 0.8);
   }
   button {
-    background-color: rgba(255,156,51,.8);
+    background-color: rgba(255, 156, 51, 0.8);
   }
 }
 
@@ -88,7 +87,6 @@ button:active {
   text-align: center;
   background: var(--color-background);
 }
-
 
 @keyframes logo-spin {
   from {
@@ -103,4 +101,27 @@ button:active {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
+}
+
+@keyframes loader-animation {
+  0% {
+    transform: translate(0px, 0px);
+  }
+  25% {
+    transform: translate(0px, 10px);
+  }
+  50% {
+    transform: translate(10px, 10px);
+  }
+  75% {
+    transform: translate(10px, 0px);
+  }
+  100% {
+    transform: translate(0px, 0px);
+  }
+}
+
+.loader-animation {
+  animation: 2s infinite forwards loader-animation;
+  transition: all 0.1s;
 }

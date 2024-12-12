@@ -1,65 +1,97 @@
-import React, { FormEvent, useState } from "react";
-import { getProductGroups } from "../api";
-import { ProductGroup } from "../api/types";
+import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { getProductGroups, getSuggestions } from "../api";
+import { PriceRange, ProductGroup } from "../api/types";
 import ProductCard from "../components/ProductCard";
+import { bufferTime, filter, fromEvent } from "rxjs";
+import { Loader } from "../components/Loader";
 
-type FilterOption = {
-  id: string;
-  name: string;
-};
-
-const filters: FilterOption[] = [
-  { id: "toy", name: "Игрушки" },
-  { id: "tv", name: "Телевизоры" },
-  { id: "game", name: "Игры" },
+const defaultSuggestions = [
+  "Подарок сыну",
+  "Подарок мужу",
+  "Подарок жене",
+  "Подарок дочери",
 ];
 
 const FiltersAndSearch: React.FC = () => {
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [productGroups, setProductGroups] = useState<ProductGroup[] | null>(
     null
   );
   const [error, setError] = useState("");
-  const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  const [priceRange, setPriceRange] = useState<PriceRange | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>(defaultSuggestions);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const toggleFilter = (filterId: string) => {
-    setSelectedFilters((prev) =>
-      prev.includes(filterId)
-        ? prev.filter((id) => id !== filterId)
-        : [...prev, filterId]
-    );
-  };
+  const queryInputRef = useRef<HTMLInputElement | null>(null);
+
+  const products = useMemo(
+    () =>
+      productGroups
+        ? productGroups.slice(0, 6).map((g) => g.products[0])
+        : null,
+    [productGroups]
+  );
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setPriceRange((prev) => ({ ...prev, [name]: value }));
+
+    setPriceRange((prev) => ({
+      ...(prev as PriceRange),
+      [name as keyof PriceRange]: value ? +value : undefined,
+    }));
   };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
+    let price: null | PriceRange = { ...priceRange } as PriceRange;
+    if (price && price.min && !price.max) price.max = 9999999;
+    if (price && price.max && !price.min) price.min = 1;
+    if (!price.max && !price.min) price = null;
+
     const formData = new FormData(event.target as HTMLFormElement);
     const query = formData.get("query") as string;
     if (!query) return setError("Введите запрос!");
 
+    setProductGroups(null);
+    setSuggestions(defaultSuggestions);
+    setLoading(true);
     setError("");
 
-    const products = await getProductGroups(query);
+    const products = await getProductGroups(query, price ?? undefined);
+
+    setLoading(false);
     if (!products?.product_groups?.length)
       return setError("Произошла ошибка(((99");
 
     setProductGroups(products.product_groups);
   };
 
-  const filteredProducts = productGroups?.filter((product) => {
-    const minPrice = priceRange.min ? parseInt(priceRange.min, 10) : 0;
-    const maxPrice = priceRange.max ? parseInt(priceRange.max, 10) : Infinity;
-    const productPrice = parseInt(product.price, 10);
-    return productPrice >= minPrice && productPrice <= maxPrice;
-  });
+  const handleQuerySuggestions = async () => {
+    if (!queryInputRef.current) return;
+
+    const query = queryInputRef.current.value;
+    const suggestions = await getSuggestions(query);
+    if (!suggestions?.length) return;
+
+    setSuggestions(suggestions);
+  };
+
+  useEffect(() => {
+    if (!queryInputRef.current) return;
+
+    const changeObservable = fromEvent(queryInputRef.current, "input")
+      .pipe(
+        bufferTime(1500),
+        filter((events) => events.length > 0)
+      )
+      .subscribe(handleQuerySuggestions);
+
+    return () => changeObservable.unsubscribe();
+  }, [queryInputRef]);
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <main className="w-3/4 p-4 mx-auto">
       {/* Поисковая строка */}
       <form className="mb-4 flex flex-col gap-2" onSubmit={handleSubmit}>
         <input
@@ -67,6 +99,9 @@ const FiltersAndSearch: React.FC = () => {
           name="query"
           placeholder="Подбор подарков..."
           className="w-full px-4 py-2 border border-neutral-300 rounded-md outline-none focus:border-focus transition-all"
+          ref={queryInputRef}
+          value={query}
+          onInput={(e) => setQuery(e.currentTarget.value)}
         />
         <b className="font-bold text-red-500">{error}</b>
 
@@ -75,7 +110,7 @@ const FiltersAndSearch: React.FC = () => {
           <input
             type="number"
             name="min"
-            value={priceRange.min}
+            value={priceRange?.min ?? ""}
             onChange={handlePriceChange}
             placeholder="Цена от"
             className="w-full px-4 py-2 border border-neutral-300 rounded-md outline-none focus:border-focus transition-all"
@@ -83,70 +118,50 @@ const FiltersAndSearch: React.FC = () => {
           <input
             type="number"
             name="max"
-            value={priceRange.max}
+            value={priceRange?.max ?? ""}
             onChange={handlePriceChange}
             placeholder="Цена до"
             className="w-full px-4 py-2 border border-neutral-300 rounded-md outline-none focus:border-focus transition-all"
           />
         </div>
 
-        <button>Поиск</button>
+        <button>{loading ? "..." : "Поиск"}</button>
       </form>
 
       {/* Фильтры */}
       <div className="flex flex-wrap gap-2 mb-6">
-        {filters.map((filter) => (
+        {suggestions.map((suggestion, idx) => (
           <button
-            key={filter.id}
-            onClick={() => toggleFilter(filter.id)}
-            className={`text-white transition-all ${
-              selectedFilters.includes(filter.id) ? "bg-selected" : "bg-primary"
-            }`}
+            key={idx}
+            onClick={() => {
+              setQuery(suggestion.trim());
+            }}
           >
-            {filter.name}
+            {suggestion}
           </button>
         ))}
       </div>
 
       {/* Отображение карточек товаров */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <ProductCard
-          image="https://c.dns-shop.ru/thumb/st4/fit/300/300/70740c3150d16b011dc844f143fedb5f/2b2c9fcad6869829aefa2024ae5c07e03321376085bb672ea0f96d8ece8ab680.jpg"
-          title="Смартфон Samsung Galaxy"
-          price="41 999 ₽"
-          description="6.6' Смартфон Samsung Galaxy A55 256 ГБ"
-          isAvailable={true}/>
-          <ProductCard
-            image="https://via.placeholder.com/150"
-            title="Игровая приставка Sony"
-            price="59 999 ₽"
-            description="PlayStation 5 с дисководом"
-            isAvailable={false}
-          />
-          <ProductCard
-            image="https://via.placeholder.com/150"
-            title="Телевизор LG OLED"
-            price="89 999 ₽"
-            description="OLED 55' 4K UHD Smart TV"
-            isAvailable={true}
-          />
-          <ProductCard
-            image="https://via.placeholder.com/150"
-            title="Умные часы Apple Watch"
-            price="29 999 ₽"
-            description="Apple Watch Series 9"
-            isAvailable={true}
-          />
-          <ProductCard
-            image="https://via.placeholder.com/150"
-            title="Пылесос Dyson"
-            price="39 999 ₽"
-            description="Беспроводной пылесос Dyson V15"
-            isAvailable={false}
-          />
-        </div>
+        {products &&
+          products?.map((p) => (
+            <ProductCard
+              key={p.guid}
+              description={p.specs}
+              image={p.image}
+              score={p.rating}
+              title={p.title}
+              url={`https://www.dns-shop.ru/product/${p.searchUid}`}
+            />
+          ))}
       </div>
-    );
-  };
-  
-  export default FiltersAndSearch;
+
+      <div className="flex flex-row justify-center">
+        {loading && <Loader />}
+      </div>
+    </main>
+  );
+};
+
+export default FiltersAndSearch;
