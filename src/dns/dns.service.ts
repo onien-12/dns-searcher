@@ -34,8 +34,6 @@ export class DnsService {
       ApiResponse<SearchResult | SearchCatalogResult>
     >(`/get-search-result?${params.toString()}`);
 
-    console.log(response.data);
-
     return response.data;
   }
 
