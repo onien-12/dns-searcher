@@ -20,6 +20,7 @@ const FiltersAndSearch: React.FC = () => {
     null
   );
   const [error, setError] = useState("");
+  const [priceRange, setPriceRange] = useState({ min: "", max: "" });
 
   const toggleFilter = (filterId: string) => {
     setSelectedFilters((prev) =>
@@ -27,6 +28,11 @@ const FiltersAndSearch: React.FC = () => {
         ? prev.filter((id) => id !== filterId)
         : [...prev, filterId]
     );
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPriceRange((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -45,6 +51,13 @@ const FiltersAndSearch: React.FC = () => {
     setProductGroups(products.product_groups);
   };
 
+  const filteredProducts = productGroups?.filter((product) => {
+    const minPrice = priceRange.min ? parseInt(priceRange.min, 10) : 0;
+    const maxPrice = priceRange.max ? parseInt(priceRange.max, 10) : Infinity;
+    const productPrice = parseInt(product.price, 10);
+    return productPrice >= minPrice && productPrice <= maxPrice;
+  });
+
   return (
     <div className="p-4 max-w-4xl mx-auto">
       {/* Поисковая строка */}
@@ -56,6 +69,27 @@ const FiltersAndSearch: React.FC = () => {
           className="w-full px-4 py-2 border border-neutral-300 rounded-md outline-none focus:border-focus transition-all"
         />
         <b className="font-bold text-red-500">{error}</b>
+
+        {/* Поля ввода цен */}
+        <div className="flex gap-2">
+          <input
+            type="number"
+            name="min"
+            value={priceRange.min}
+            onChange={handlePriceChange}
+            placeholder="Цена от"
+            className="w-full px-4 py-2 border border-neutral-300 rounded-md outline-none focus:border-focus transition-all"
+          />
+          <input
+            type="number"
+            name="max"
+            value={priceRange.max}
+            onChange={handlePriceChange}
+            placeholder="Цена до"
+            className="w-full px-4 py-2 border border-neutral-300 rounded-md outline-none focus:border-focus transition-all"
+          />
+        </div>
+
         <button>Поиск</button>
       </form>
 
@@ -77,7 +111,7 @@ const FiltersAndSearch: React.FC = () => {
       {/* Отображение карточек товаров */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <ProductCard
-          image="https://via.placeholder.com/150"
+          image="https://c.dns-shop.ru/thumb/st4/fit/300/300/70740c3150d16b011dc844f143fedb5f/2b2c9fcad6869829aefa2024ae5c07e03321376085bb672ea0f96d8ece8ab680.jpg"
           title="Смартфон Samsung Galaxy"
           price="41 999 ₽"
           description="6.6' Смартфон Samsung Galaxy A55 256 ГБ"
