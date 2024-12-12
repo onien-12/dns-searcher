@@ -1,6 +1,7 @@
 import React, { FormEvent, useState } from "react";
 import { getProductGroups } from "../api";
 import { ProductGroup } from "../api/types";
+import ProductCard from "../components/ProductCard";
 
 type FilterOption = {
   id: string;
@@ -59,7 +60,7 @@ const FiltersAndSearch: React.FC = () => {
       </form>
 
       {/* Фильтры */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mb-6">
         {filters.map((filter) => (
           <button
             key={filter.id}
@@ -73,15 +74,45 @@ const FiltersAndSearch: React.FC = () => {
         ))}
       </div>
 
-      {/* Отображение выбранных фильтров */}
-      <div className="mt-4">
-        <h3 className="text-lg font-semibold">Выбранные фильтры:</h3>
-        <p>{selectedFilters.length > 0 ? selectedFilters.join(", ") : "Нет"}</p>
+      {/* Отображение карточек товаров */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <ProductCard
+          image="https://via.placeholder.com/150"
+          title="Смартфон Samsung Galaxy"
+          price="41 999 ₽"
+          description="6.6' Смартфон Samsung Galaxy A55 256 ГБ"
+          isAvailable={true}/>
+          <ProductCard
+            image="https://via.placeholder.com/150"
+            title="Игровая приставка Sony"
+            price="59 999 ₽"
+            description="PlayStation 5 с дисководом"
+            isAvailable={false}
+          />
+          <ProductCard
+            image="https://via.placeholder.com/150"
+            title="Телевизор LG OLED"
+            price="89 999 ₽"
+            description="OLED 55' 4K UHD Smart TV"
+            isAvailable={true}
+          />
+          <ProductCard
+            image="https://via.placeholder.com/150"
+            title="Умные часы Apple Watch"
+            price="29 999 ₽"
+            description="Apple Watch Series 9"
+            isAvailable={true}
+          />
+          <ProductCard
+            image="https://via.placeholder.com/150"
+            title="Пылесос Dyson"
+            price="39 999 ₽"
+            description="Беспроводной пылесос Dyson V15"
+            isAvailable={false}
+          />
+        </div>
       </div>
-
-      {productGroups && productGroups?.map((pg) => <>{pg.title}</>)}
-    </div>
-  );
-};
-
-export default FiltersAndSearch;
+    );
+  };
+  
+  export default FiltersAndSearch;
