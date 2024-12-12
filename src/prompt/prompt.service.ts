@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import OpenAI from 'openai';
 import { DnsService } from 'src/dns/dns.service';
-import { generatePrompt } from './constants';
+import { generateProductsPrompt } from './constants';
+import { PriceRange } from 'src/dns/types';
 
 @Injectable()
 export class PromptService {
@@ -23,7 +24,7 @@ export class PromptService {
    */
   async getTags(query: string) {
     const response = await this.openai.chat.completions.create({
-      messages: [{ role: 'user', content: generatePrompt(query) }],
+      messages: [{ role: 'user', content: generateProductsPrompt(query) }],
       model: 'gpt-4o-mini',
     });
     const message = response.choices[0].message.content;
@@ -38,11 +39,11 @@ export class PromptService {
    * Gets a list of tags and performs a search
    * on each
    */
-  async getProducts(query: string) {
+  async getProducts(query: string, price?: PriceRange) {
     const tags = await this.getTags(query).then((t) => t.slice(0, 10));
     const productGroups = [];
     const searches = await Promise.all(
-      tags.map((tag) => this.dnsService.search(`"${tag}"`)),
+      tags.map((tag) => this.dnsService.search(`"${tag}"`, price)),
     ).then((r) => r.filter((s) => !!s));
 
     // search can result with 2 different things:
@@ -55,7 +56,9 @@ export class PromptService {
       else if (response.data.type === 'catalog') {
         const data = response.data.data;
         const catalogProducts = await this.dnsService.getCategoryProducts(
-          `searchUid=${data.searchUid}&init=1&p=1&order=6&${data.params}`,
+          `searchUid=${data.searchUid}&init=1&p=1&order=6` +
+            (price ? `&price=${price.min}-${price.max}` : '') +
+            `&${data.params}`,
         );
         if (catalogProducts?.data.productGroups)
           productGroups.push(...catalogProducts.data.productGroups);

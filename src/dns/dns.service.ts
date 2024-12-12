@@ -3,6 +3,7 @@ import DNSRequester from './communicator/requester';
 import {
   ApiResponse,
   CatalogData,
+  PriceRange,
   SearchCatalogResult,
   SearchData,
   SearchResult,
@@ -19,10 +20,18 @@ export class DnsService {
   /**
    * Performs a dns shop search
    */
-  async search(query: string) {
+  async search(query: string, price?: PriceRange) {
+    const params = new URLSearchParams([
+      ['q', query],
+      ['init', '1'],
+      ['p', '1'],
+    ]);
+
+    if (price) params.set('price', `${price.min}-${price.max}`);
+
     const response = await this.requester.request<
       ApiResponse<SearchResult | SearchCatalogResult>
-    >(`/get-search-result?q=${query}`);
+    >(`/get-search-result?${params.toString()}`);
 
     console.log(response.data);
 

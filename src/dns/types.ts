@@ -3,6 +3,11 @@ export type ApiResponse<D> = {
   data: D;
 };
 
+export interface PriceRange {
+  min: number;
+  max: number;
+}
+
 export interface SearchCatalogResult {
   type: 'catalog';
   data: {

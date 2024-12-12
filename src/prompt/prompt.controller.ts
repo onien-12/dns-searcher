@@ -12,6 +12,6 @@ export class PromptController {
    */
   @Post('products')
   getProducts(@Body() payload: GetProductsDto) {
-    return this.promptService.getProducts(payload.query);
+    return this.promptService.getProducts(payload.query, payload.price);
   }
 }
