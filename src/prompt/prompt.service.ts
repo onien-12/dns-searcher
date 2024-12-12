@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import OpenAI from 'openai';
 import { DnsService } from 'src/dns/dns.service';
-import { generateProductsPrompt } from './constants';
+import { generateButtonsPrompt, generateProductsPrompt } from './constants';
 import { PriceRange } from 'src/dns/types';
+import { ChatModel } from 'openai/resources';
 
 @Injectable()
 export class PromptService {
@@ -20,19 +21,42 @@ export class PromptService {
   }
 
   /**
+   * Sends a request to ai chat bot and returns his most
+   * relevant response
+   */
+  async performPrompt(query: string, model: ChatModel = 'gpt-4o-mini') {
+    const response = await this.openai.chat.completions.create({
+      model,
+      messages: [{ role: 'user', content: query }],
+    });
+    return response.choices[0].message.content;
+  }
+
+  /**
+   * Extracts a json list from ai generated message
+   */
+  extractJsonList<T>(message: string) {
+    const json = message.match(/\[(.|\n)*\]/g)[0];
+    if (!json) return [];
+
+    return JSON.parse(json) as T[];
+  }
+
+  /**
    * Returns a relevant tags by using provided query
    */
   async getTags(query: string) {
-    const response = await this.openai.chat.completions.create({
-      messages: [{ role: 'user', content: generateProductsPrompt(query) }],
-      model: 'gpt-4o-mini',
-    });
-    const message = response.choices[0].message.content;
-    const json = message.match(/\[(.+)\]/g)[0];
-    if (!json) return [];
+    const message = await this.performPrompt(generateProductsPrompt(query));
+    return this.extractJsonList<string>(message);
+  }
 
-    const tags = JSON.parse(json);
-    return tags as string[];
+  /**
+   * Returns a list of ai suggestions based on
+   * some user query
+   */
+  async getSuggestions(query: string) {
+    const message = await this.performPrompt(generateButtonsPrompt(query));
+    return this.extractJsonList<string>(message);
   }
 
   /**
