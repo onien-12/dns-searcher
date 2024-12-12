@@ -2,7 +2,7 @@ import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { getProductGroups, getSuggestions } from "../api";
 import { PriceRange, ProductGroup } from "../api/types";
 import ProductCard from "../components/ProductCard";
-import { bufferTime, filter, fromEvent } from "rxjs";
+import { bufferTime, debounceTime, filter, fromEvent } from "rxjs";
 import { Loader } from "../components/Loader";
 
 const defaultSuggestions = [
@@ -81,10 +81,7 @@ const FiltersAndSearch: React.FC = () => {
     if (!queryInputRef.current) return;
 
     const changeObservable = fromEvent(queryInputRef.current, "input")
-      .pipe(
-        bufferTime(1500),
-        filter((events) => events.length > 0)
-      )
+      .pipe(debounceTime(500))
       .subscribe(handleQuerySuggestions);
 
     return () => changeObservable.unsubscribe();
