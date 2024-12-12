@@ -11,12 +11,13 @@ export class PromptService {
   openai: OpenAI;
 
   constructor(private readonly dnsService: DnsService) {
-    if (!process.env.OPENAI_KEY || !process.env.OPENAI_PROXY)
-      throw new Error('Could not find openai keys');
+    if (!process.env.OPENAI_KEY) throw new Error('Could not find openai keys');
 
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_KEY,
-      httpAgent: new HttpsProxyAgent(process.env.OPENAI_PROXY),
+      httpAgent: process.env.OPENAI_PROXY
+        ? new HttpsProxyAgent(process.env.OPENAI_PROXY)
+        : undefined,
     });
   }
 
