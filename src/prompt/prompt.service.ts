@@ -80,7 +80,7 @@ export class PromptService {
       else if (response.data.type === 'catalog') {
         const data = response.data.data;
         const catalogProducts = await this.dnsService.getCategoryProducts(
-          `searchUid=${data.searchUid}&init=1&p=1&order=6` +
+          `searchUid=${data.searchUid}&init=1&p=1&order=6&stock=now-today` +
             (price ? `&price=${price.min}-${price.max}` : '') +
             `&${data.params}`,
         );

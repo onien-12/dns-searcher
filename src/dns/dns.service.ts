@@ -25,6 +25,7 @@ export class DnsService {
       ['q', query],
       ['init', '1'],
       ['p', '1'],
+      ['stock', 'now-today'],
     ]);
 
     if (price) params.set('price', `${price.min}-${price.max}`);
