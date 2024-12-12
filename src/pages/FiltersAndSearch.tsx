@@ -2,7 +2,7 @@ import React, { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { getProductGroups, getSuggestions } from "../api";
 import { PriceRange, ProductGroup } from "../api/types";
 import ProductCard from "../components/ProductCard";
-import { bufferTime, debounceTime, filter, fromEvent } from "rxjs";
+import { debounceTime, fromEvent } from "rxjs";
 import { Loader } from "../components/Loader";
 
 const defaultSuggestions = [
