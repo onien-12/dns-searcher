@@ -25,7 +25,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         />
         <h2 className="font-bold text-lg mb-2">{title}</h2>
         <p className="text-gray-500 text-sm mb-4">{description}</p>
-        <p className="text-gray-400 text-sm">{score}</p>
+        <p className="text-gray-400 text-sm">Рейтинг: {score}</p>
       </div>
     </a>
   );
